@@ -17,8 +17,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # APP CONFIGURATION
 # --------------------------------------------------
 
-# app.py is inside the website folder.
-# BASE_DIR points to the main project folder.
 BASE_DIR = Path(__file__).resolve().parent.parent
 WEBSITE_DIR = Path(__file__).resolve().parent
 
@@ -28,7 +26,6 @@ app = Flask(
     static_folder=str(WEBSITE_DIR / "static")
 )
 
-# The .env file is in the main project folder.
 load_dotenv(BASE_DIR / ".env")
 
 app.secret_key = os.getenv("SECRET_KEY", "library-dev-key")
@@ -185,7 +182,10 @@ def login():
 
         except mysql.connector.Error:
             app.logger.exception("Login database error")
-            flash("Could not connect to the database. Check your settings.", "error")
+            flash(
+                "Could not connect to the database. Check your settings.",
+                "error"
+            )
 
         finally:
             if cursor:
@@ -256,14 +256,20 @@ def register():
             if connection:
                 connection.rollback()
 
-            flash("That username or email may already be registered.", "error")
+            flash(
+                "That username or email may already be registered.",
+                "error"
+            )
 
         except mysql.connector.Error:
             if connection:
                 connection.rollback()
 
             app.logger.exception("Registration database error")
-            flash("Registration failed. Check your database settings.", "error")
+            flash(
+                "Registration failed. Check your database settings.",
+                "error"
+            )
 
         finally:
             if cursor:
@@ -328,7 +334,10 @@ def library():
             raise ValueError
 
     except ValueError:
-        flash("Please enter a valid price range and category selection.", "error")
+        flash(
+            "Please enter a valid price range and category selection.",
+            "error"
+        )
         return redirect(url_for("library"))
 
     connection = None
@@ -488,7 +497,10 @@ def library():
 
     except mysql.connector.Error:
         app.logger.exception("Library database error")
-        flash("Could not load the library. Check the database connection.", "error")
+        flash(
+            "Could not load the library. Check the database connection.",
+            "error"
+        )
         return redirect(url_for("login"))
 
     finally:
@@ -563,7 +575,10 @@ def add_book():
             delete_uploaded_image(image_path)
 
         app.logger.exception("Add book database error")
-        flash("Could not add the book. Check the selected author and database.", "error")
+        flash(
+            "Could not add the book. Check the selected author and database.",
+            "error"
+        )
 
     finally:
         if cursor:
@@ -991,6 +1006,217 @@ def delete_author(author_id):
             connection.close()
 
     return redirect(url_for("library"))
+
+
+# --------------------------------------------------
+# F2.4 - LOANS
+# --------------------------------------------------
+
+@app.route("/loans")
+def loans():
+
+    guard = require_login()
+    if guard:
+        return guard
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_library_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # (a) Loans that have not been returned
+        cursor.execute("""
+            SELECT
+                l.loan_id,
+                b.title AS book_title,
+                m.name AS member_name,
+                l.loan_date
+            FROM LOAN l
+            JOIN BOOK b ON l.book_id = b.book_id
+            JOIN MEMBER m ON l.member_id = m.member_id
+            WHERE l.return_date IS NULL
+        """)
+        active_loans = cursor.fetchall()
+
+        # (b) Members who never borrowed a book
+        cursor.execute("""
+            SELECT
+                m.member_id,
+                m.name,
+                m.email
+            FROM MEMBER m
+            LEFT JOIN LOAN l ON m.member_id = l.member_id
+            WHERE l.loan_id IS NULL
+        """)
+        members_without_loans = cursor.fetchall()
+
+        # (c) Books that were never borrowed
+        cursor.execute("""
+            SELECT
+                b.book_id,
+                b.title,
+                b.price
+            FROM BOOK b
+            LEFT JOIN LOAN l ON b.book_id = l.book_id
+            WHERE l.loan_id IS NULL
+        """)
+        books_without_loans = cursor.fetchall()
+
+        return render_template(
+            "loans.html",
+            active_loans=active_loans,
+            members_without_loans=members_without_loans,
+            books_without_loans=books_without_loans
+        )
+
+    except mysql.connector.Error:
+        app.logger.exception("Could not load loans page")
+        flash("Could not load loan information.", "error")
+        return redirect(url_for("library"))
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if connection and connection.is_connected():
+            connection.close()
+
+
+# --------------------------------------------------
+# F2.5 - MOST BORROWED
+# --------------------------------------------------
+
+@app.route("/most-borrowed")
+def most_borrowed():
+
+    guard = require_login()
+    if guard:
+        return guard
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_library_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # (a) Three most borrowed books
+        cursor.execute("""
+            SELECT
+                b.book_id,
+                b.title,
+                COUNT(l.loan_id) AS loan_count
+            FROM BOOK b
+            JOIN LOAN l ON b.book_id = l.book_id
+            GROUP BY b.book_id, b.title
+            ORDER BY loan_count DESC, b.title
+            LIMIT 3
+        """)
+        top_books = cursor.fetchall()
+
+        # (b) Member with the most loans
+        cursor.execute("""
+            SELECT
+                m.member_id,
+                m.name,
+                COUNT(l.loan_id) AS loan_count
+            FROM MEMBER m
+            JOIN LOAN l ON m.member_id = l.member_id
+            GROUP BY m.member_id, m.name
+            ORDER BY loan_count DESC, m.name
+            LIMIT 1
+        """)
+        top_member = cursor.fetchall()
+
+        return render_template(
+            "most_borrowed.html",
+            top_books=top_books,
+            top_member=top_member
+        )
+
+    except mysql.connector.Error:
+        app.logger.exception("Could not load most borrowed page")
+        flash("Could not load borrowing statistics.", "error")
+        return redirect(url_for("library"))
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if connection and connection.is_connected():
+            connection.close()
+
+
+# --------------------------------------------------
+# F2.6 - AUTHORS AND BOOKS
+# --------------------------------------------------
+
+@app.route("/authors-books")
+def authors_books():
+
+    guard = require_login()
+    if guard:
+        return guard
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_library_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # (a) Every author with book count, including authors with zero
+        cursor.execute("""
+            SELECT
+                a.author_id,
+                a.name,
+                COUNT(b.book_id) AS book_count
+            FROM AUTHOR a
+            LEFT JOIN BOOK b ON a.author_id = b.author_id
+            GROUP BY a.author_id, a.name
+            ORDER BY a.name
+        """)
+        authors_with_counts = cursor.fetchall()
+
+        # (b) Books whose author and publisher are from the same country
+        cursor.execute("""
+            SELECT
+                b.book_id,
+                b.title,
+                a.name AS author_name,
+                a.country AS author_country,
+                p.name AS publisher_name,
+                p.country AS publisher_country
+            FROM BOOK b
+            JOIN AUTHOR a ON b.author_id = a.author_id
+            JOIN PUBLISHER p ON b.publisher_id = p.publisher_id
+            WHERE a.country = p.country
+            ORDER BY b.title
+        """)
+        same_country_books = cursor.fetchall()
+
+        return render_template(
+            "authors_books.html",
+            authors_with_counts=authors_with_counts,
+            same_country_books=same_country_books
+        )
+
+    except mysql.connector.Error:
+        app.logger.exception("Could not load authors and books page")
+        flash(
+            "Could not load authors and books information.",
+            "error"
+        )
+        return redirect(url_for("library"))
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if connection and connection.is_connected():
+            connection.close()
 
 
 # --------------------------------------------------

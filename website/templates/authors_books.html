@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authors and Books | The Reading Room</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="library-page">
+
+<header class="library-header">
+    <a href="{{ url_for('library') }}" class="library-brand">
+        THE READING ROOM
+    </a>
+
+    <div class="header-right">
+        <span>Welcome, {{ session['username'] }}</span>
+        <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
+    </div>
+</header>
+
+<main class="library-main">
+
+    <section class="library-hero">
+        <div class="hero-copy">
+            <span class="eyebrow">F2.6 · AUTHORS AND BOOKS</span>
+            <h1>Authors and books.</h1>
+            <p>
+                Explore the number of books written by each author
+                and discover books whose authors and publishers
+                share the same country.
+            </p>
+        </div>
+    </section>
+
+    <!-- AUTHORS WITH BOOK COUNTS -->
+    <section class="library-section">
+
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">AUTHOR REPORT</span>
+                <h2>Books written by each author</h2>
+            </div>
+        </div>
+
+        {% if authors_with_counts %}
+
+        <div class="table-wrapper">
+            <table class="library-table">
+                <thead>
+                    <tr>
+                        <th>Author ID</th>
+                        <th>Author Name</th>
+                        <th>Number of Books</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for author in authors_with_counts %}
+                    <tr>
+                        <td>{{ author.author_id }}</td>
+                        <td>{{ author.name }}</td>
+                        <td>{{ author.book_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+            <p>No authors found.</p>
+        {% endif %}
+
+    </section>
+
+    <!-- SAME COUNTRY BOOKS -->
+    <section class="library-section">
+
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">COUNTRY MATCH</span>
+                <h2>Authors and publishers from the same country</h2>
+            </div>
+        </div>
+
+        {% if same_country_books %}
+
+        <div class="table-wrapper">
+            <table class="library-table">
+                <thead>
+                    <tr>
+                        <th>Book ID</th>
+                        <th>Book Title</th>
+                        <th>Author</th>
+                        <th>Author Country</th>
+                        <th>Publisher</th>
+                        <th>Publisher Country</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for book in same_country_books %}
+                    <tr>
+                        <td>{{ book.book_id }}</td>
+                        <td class="book-title">{{ book.title }}</td>
+                        <td>{{ book.author_name }}</td>
+                        <td>{{ book.author_country }}</td>
+                        <td>{{ book.publisher_name }}</td>
+                        <td>{{ book.publisher_country }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+            <p>No books found where the author and publisher share the same country.</p>
+        {% endif %}
+
+    </section>
+
+    <section class="library-section">
+        <a href="{{ url_for('library') }}" class="logout-link">
+            ← Back to Library
+        </a>
+    </section>
+
+</main>
+
+</body>
+</html>

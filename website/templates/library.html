@@ -50,6 +50,32 @@
         </section>
 
 
+        <!-- F2.4, F2.5, F2.6: DATABASE REPORTS -->
+        <section class="library-section">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">EXPLORE YOUR DATA</span>
+                    <h2>Database reports</h2>
+                    <p>Explore loans, popular books, and author statistics.</p>
+                </div>
+            </div>
+
+            <div class="report-links">
+                <a class="primary-button" href="{{ url_for('loans') }}">
+                    Loans Report
+                </a>
+
+                <a class="primary-button" href="{{ url_for('most_borrowed') }}">
+                    Most Borrowed Books
+                </a>
+
+                <a class="primary-button" href="{{ url_for('authors_books') }}">
+                    Authors & Books
+                </a>
+            </div>
+        </section>
+
+
         <!-- FLASH MESSAGES -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}

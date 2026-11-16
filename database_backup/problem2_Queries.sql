@@ -93,3 +93,91 @@ SELECT
     MIN(price) AS minimum_book_price,
     MAX(price) AS maximum_book_price
 FROM BOOK;
+-- =====================================
+-- F2.4: LOANS
+-- =====================================
+
+-- (a) Loans that have not been returned
+SELECT
+    l.loan_id,
+    b.title AS book_title,
+    m.name AS member_name,
+    l.loan_date
+FROM LOAN l
+JOIN BOOK b ON l.book_id = b.book_id
+JOIN MEMBER m ON l.member_id = m.member_id
+WHERE l.return_date IS NULL;
+
+
+-- (b) Members who never borrowed a book
+SELECT
+    m.member_id,
+    m.name,
+    m.email
+FROM MEMBER m
+LEFT JOIN LOAN l ON m.member_id = l.member_id
+WHERE l.loan_id IS NULL;
+
+
+-- (c) Books that were never borrowed
+SELECT
+    b.book_id,
+    b.title,
+    b.price
+FROM BOOK b
+LEFT JOIN LOAN l ON b.book_id = l.book_id
+WHERE l.loan_id IS NULL;
+-- =====================================
+-- F2.5: MOST BORROWED
+-- =====================================
+
+-- (a) Three most borrowed books
+SELECT
+    b.book_id,
+    b.title,
+    COUNT(l.loan_id) AS loan_count
+FROM BOOK b
+JOIN LOAN l ON b.book_id = l.book_id
+GROUP BY b.book_id, b.title
+ORDER BY loan_count DESC
+LIMIT 3;
+
+
+-- (b) Member with the most loans
+SELECT
+    m.member_id,
+    m.name,
+    COUNT(l.loan_id) AS loan_count
+FROM MEMBER m
+JOIN LOAN l ON m.member_id = l.member_id
+GROUP BY m.member_id, m.name
+ORDER BY loan_count DESC
+LIMIT 1;
+-- =====================================
+-- F2.6: AUTHORS AND BOOKS
+-- =====================================
+
+-- (a) Every author with their book count, including authors with zero books
+SELECT
+    a.author_id,
+    a.name,
+    COUNT(b.book_id) AS book_count
+FROM AUTHOR a
+LEFT JOIN BOOK b ON a.author_id = b.author_id
+GROUP BY a.author_id, a.name
+ORDER BY a.name;
+
+
+-- (b) Books whose author and publisher are from the same country
+SELECT
+    b.book_id,
+    b.title,
+    a.name AS author_name,
+    a.country AS author_country,
+    p.name AS publisher_name,
+    p.country AS publisher_country
+FROM BOOK b
+JOIN AUTHOR a ON b.author_id = a.author_id
+JOIN PUBLISHER p ON b.publisher_id = p.publisher_id
+WHERE a.country = p.country
+ORDER BY b.title;

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Reading Room | Loans</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="library-page">
+
+    <header class="library-header">
+        <a class="library-brand" href="{{ url_for('library') }}">
+            <span class="brand-icon">R</span>
+            THE READING ROOM
+        </a>
+
+        <div class="header-right">
+            <span>Welcome, {{ session['username'] }}</span>
+            <a class="logout-link" href="{{ url_for('logout') }}">Log out</a>
+        </div>
+    </header>
+
+    <main class="library-main">
+
+        <!-- HERO SECTION -->
+        <section class="library-hero">
+            <div class="hero-copy">
+                <span class="eyebrow">F2.4 · LOAN MANAGEMENT</span>
+                <h1>Books on the move.</h1>
+                <p>Explore current loans, members who haven't borrowed, and books waiting to be discovered.</p>
+            </div>
+        </section>
+
+        <!-- UNRETURNED LOANS -->
+        <section class="library-section">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">CURRENTLY BORROWED</span>
+                    <h2>Unreturned loans</h2>
+                </div>
+            </div>
+
+            {% if active_loans %}
+                <div class="table-wrapper">
+                    <table class="library-table">
+                        <thead>
+                            <tr>
+                                <th>Loan ID</th>
+                                <th>Book</th>
+                                <th>Member</th>
+                                <th>Loan date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for loan in active_loans %}
+                                <tr>
+                                    <td>{{ loan.loan_id }}</td>
+                                    <td>{{ loan.book_title }}</td>
+                                    <td>{{ loan.member_name }}</td>
+                                    <td>{{ loan.loan_date }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No unreturned loans found.</p>
+            {% endif %}
+        </section>
+
+        <!-- MEMBERS WHO NEVER BORROWED -->
+        <section class="library-section">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">MEMBER ACTIVITY</span>
+                    <h2>Members who never borrowed</h2>
+                </div>
+            </div>
+
+            {% if members_without_loans %}
+                <div class="table-wrapper">
+                    <table class="library-table">
+                        <thead>
+                            <tr>
+                                <th>Member ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for member in members_without_loans %}
+                                <tr>
+                                    <td>{{ member.member_id }}</td>
+                                    <td>{{ member.name }}</td>
+                                    <td>{{ member.email }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>Every member has borrowed at least one book.</p>
+            {% endif %}
+        </section>
+
+        <!-- BOOKS NEVER BORROWED -->
+        <section class="library-section">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">WAITING TO BE DISCOVERED</span>
+                    <h2>Books never borrowed</h2>
+                </div>
+            </div>
+
+            {% if books_without_loans %}
+                <div class="table-wrapper">
+                    <table class="library-table">
+                        <thead>
+                            <tr>
+                                <th>Book ID</th>
+                                <th>Title</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for book in books_without_loans %}
+                                <tr>
+                                    <td>{{ book.book_id }}</td>
+                                    <td>{{ book.title }}</td>
+                                    <td>{{ book.price }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>All books have been borrowed at least once.</p>
+            {% endif %}
+        </section>
+
+        <!-- BACK BUTTON -->
+        <section class="library-section">
+            <a class="logout-link" href="{{ url_for('library') }}">
+                ← Back to library
+            </a>
+        </section>
+
+    </main>
+
+</body>
+</html>

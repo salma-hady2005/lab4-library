@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Most Borrowed | The Reading Room</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="library-page">
+
+<header class="library-header">
+    <a href="{{ url_for('library') }}" class="library-brand">
+        THE READING ROOM
+    </a>
+
+    <div class="header-right">
+        <span>Welcome, {{ session['username'] }}</span>
+        <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
+    </div>
+</header>
+
+<main class="library-main">
+
+    <section class="library-hero">
+        <div class="hero-copy">
+            <span class="eyebrow">F2.5 · BORROWING REPORTS</span>
+            <h1>Most borrowed books.</h1>
+            <p>
+                Discover the three most borrowed books
+                and the member with the highest number of loans.
+            </p>
+        </div>
+    </section>
+
+    <!-- TOP THREE BOOKS -->
+    <section class="library-section">
+
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">TOP THREE</span>
+                <h2>Most borrowed books</h2>
+            </div>
+        </div>
+
+        {% if top_books %}
+
+        <div class="table-wrapper">
+            <table class="library-table">
+                <thead>
+                    <tr>
+                        <th>Book ID</th>
+                        <th>Book Title</th>
+                        <th>Number of Loans</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for book in top_books %}
+                    <tr>
+                        <td>{{ book.book_id }}</td>
+                        <td class="book-title">{{ book.title }}</td>
+                        <td>{{ book.loan_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+            <p>No borrowing records found.</p>
+        {% endif %}
+
+    </section>
+
+    <!-- MEMBER WITH MOST LOANS -->
+    <section class="library-section">
+
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">MOST ACTIVE READER</span>
+                <h2>Member with the most loans</h2>
+            </div>
+        </div>
+
+        {% if top_member %}
+
+        <div class="table-wrapper">
+            <table class="library-table">
+                <thead>
+                    <tr>
+                        <th>Member ID</th>
+                        <th>Member Name</th>
+                        <th>Number of Loans</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for member in top_member %}
+                    <tr>
+                        <td>{{ member.member_id }}</td>
+                        <td>{{ member.name }}</td>
+                        <td>{{ member.loan_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+            <p>No borrowing records found.</p>
+        {% endif %}
+
+    </section>
+
+    <section class="library-section">
+        <a href="{{ url_for('library') }}" class="logout-link">
+            ← Back to Library
+        </a>
+    </section>
+
+</main>
+
+</body>
+</html>
